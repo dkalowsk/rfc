@@ -2,20 +2,23 @@
 
 ## Problem Description
 
-The current policy developed for the Zephyr projects tiered board support lays
-the ground work for starting Hardware In the Loop (HIL) testing. With a few
-tweaks it can be expanded to support HIL testing in a per-PR and regular
-cadence testing work flow, while aligning to the defined testing levels.
+When the TSC [voted](https://lists.zephyrproject.org/g/tsc/message/1464) to add
+tiered board support for testing, the resulting vote left implementation
+details open.  Specifically the vote does not define which tiers map to the
+defined testing levels, when each tier will be used in the development process,
+and did not clearly provide a means to identify which boards are in which
+tiers.
 
 ## Proposed Change (Summary)
 
-Adding more granularity to tiered board support definition will allow the Zephyr
-project's CI to expand to include HIL support. The proposal does not remove
-the currently defined tiered support. Instead it adds another layer to make it clear which boards
-are needed and when.
+Expanding the tiered board support concept beyond 3 tiers will help clarify
+which board tier maps to specific testing levels. Adding an in-tree mechanism
+to record and discover which boards are in which tiers ensures that the
+information is able to be queried and expanded for the future lifetime of
+releases.
 
-Additionally the proposal adds an in-tree mechanism to record the project level
-decisions on which boards are in the tiered support.
+This introduces the ground work infrastructure needed to move towards allowing
+hardware testing to block the merge of a PR.
 
 ## Proposed Change (Detail)
 
@@ -25,9 +28,9 @@ support system policy. A brief summary (see link for full details):
 
 - Tier 0: Running twister tests on emulation platforms
 - Tier 1: Running a subset of publicly available platforms with twister device
-  testing on a regular basis. These platforms are typically paid support.
+testing on a regular basis. These platforms are typically paid support.
 - Tier 2: Platforms supported by the community for which no promise of testing
-  is made yet likely work due to the efforts of the community support.
+is made yet likely work due to the efforts of the community support.
 - Tier 3: Platforms that are generally deprecated or not supported.
 
 The policy can be broken into a chart:
@@ -44,27 +47,20 @@ the tiered support. As before each tier continues to encompass the support of
 the previous tier.
 
 - Tier 0: The testing of all PRs with the support of emulation and simulators
-  to verify the logic. This is no change from what we have today. Failure on
-  this tier blocks merge for the PR.
-- Tier 1: The use of a subset of hardware platforms for which testing of PRs
-  through twister on device testing becomes a requirement. These PRs contain
-  changes to code with known hardware sensitive areas as identified by the
-  project. These are to be fast unit tests that taken as a whole require no
-  more than 5-10 minutes to run total. Failure on this tier blocks the merge of
-  the PR. By blocking the merge, platform owners agree to assist in debugging
-  the failure to unblock the PR.
+to verify the logic. This is no change from what we have today. Failure on this
+tier blocks merge for the PR.
+- Tier 1: The use of a subset of hardware platforms for which passing testing
+of PRs through twister on device testing becomes a requirement.
 - Tier 2: An expanded set of hardware platforms and Zephyr unit tests to be run
-  on a regular cadence basis (i.e. weekly). These longer run tests are to check
-  known hardware sensitive areas as identified by the project and may take
-  several hours to run as a whole set. Test results will be uploaded for presentation in a dashboard. Review of the HIL dashboard will be part of the weekly Release Working Group.
-  Failures in the weekly HIL test will then be assigned a priority and assigned an owner.
+on a regular cadence basis (i.e. weekly). Failures in the cadence test are by
+definition not blocking, as the code has already been merged to the tree.
 - Tier 3: The running the complete list of boards expected to be supported by
-  the the release provided there is hardware available. The tests expect to run
-  include both the fast and long run tests. Results will be uploaded for review
-  by the Release Working Group in preparation for the pending Zephyr release
-  event.
+the a release, provided there is hardware available. The tests expected to run
+include both the fast and long run tests. Results will be uploaded for review
+by the Release Working Group in preparation for the pending Zephyr release
+event.
 - Tier 4: Replaces what was formerly called Tier 3. These are boards no longer
-  actively supported. They will not be run through any testing.
+actively supported. They will not be run through any testing.
 
 A chart version of the above descriptions to make it easier to understand.
 
@@ -80,20 +76,103 @@ A chart version of the above descriptions to make it easier to understand.
 
 During the Zephyr Maintainers Forum (ZMF), it was suggested that Tier 1 not be
 used on a per PR basis, rather on a per Merge Train basis. The reasoning behind
-the suggestion is that as a project we do not need to test the iterations of
-the PR, the functional testing should only be on the last version about to be merged in to `main`. The proposed change to use the merge train sounds reasonable.
+the suggestion is that as a project we do not need or want to test the
+iterations of the PR. That is a requirement on the developer to ensure.
+Functional testing on hardware by the Zephyr project is a verification gate
+only to be used on the last version about to be merged in to `main`. The
+proposed change to use the merge train sounds reasonable and the RFC author
+agrees with the approach.
 
-In talking with several developers, it was pointed out that there do exist
-changes where it would be useful to have the tests per PR. For example the picolibc maintainer has mentioned how useful it would be to ensure changes they have made work on as many platforms as possible before moving a PR
-out of Draft form. As such it is recommended that, if the project decides to run
-HIL on a per-merge-train, there also be a mechanism for a PR to be run on
-hardware before the merge train event. It is likely this feature can be limited
-in who can enable it.
+At least one edge case exists when limiting hardware testing to a merge train
+that should be explored.  In talking with several developers, it was pointed
+out that there do exist changes where it is useful to have the tests run per PR
+iteration. For example, the picolibc maintainer has mentioned how useful it
+would be to ensure changes made work on as many platforms as possible before
+moving a PR out of Draft form. The challenge for this area of development is
+having access to all the boards.  As such it is recommended that, if the
+project decides to run HIL on a per-merge-train, there also be a mechanism for
+a PR to be run on hardware before the merge train event. It is likely this
+feature can be limited in who can enable it.
 
-### Tiers and Levels
+### Mapping Tiers and Levels Expectations
 
-Currently the Zephyr project has levels defined. For example `smoke` and `acceptance`. Many of these
-can be mapped one-to-one if preferred.
+Currently the Zephyr project has
+[levels](https://github.com/zephyrproject-rtos/zephyr/blob/d1b8eec76bfd14058854245d09aa1e413e355c4a/scripts/schemas/twister/testsuite-schema.yaml#L78)
+defined. For example `smoke` and `acceptance`. Mapping these test levels to
+tiered board support ensures all areas of testing are covered and clearly
+documented.
+
+#### Tier 1
+
+Requirement(s): Boards in the Tier 1 classification are expected to always
+work. An incoming PR to Zephyr that triggers a run on a Tier 1 board is
+identified to have changes in code with known hardware sensitive areas.
+
+Test Level(s): `smoke`
+
+Test Length: 5-10 minutes total in length (includes flashing time)
+
+Passing Signature: PR passes CI check.
+
+Failure Signature: Blocking of the merge of the PR. By blocking the merge, with
+platform champion(s) agreeing to assist in debugging the failure to unblock the
+PR.
+
+Result(s): At this level, passing and failing of the checks accepts or blocks a
+PR from being merged.
+
+#### Tier 2
+
+Requirement(s): Boards in the Tier 2 classification run at a some regularly
+defined cadence and include the boards for Tier 1 in the run. For example the
+cadence can be defined as daily or weekly. The key distinction between Tier 1
+and Tier 2 is that for Tier 2 the code has already been merged to the tree.
+
+Test Level(s): `acceptance` and `unit`
+
+Test Length: Cadence based test must be less than the start of the next cadence
+cycle.
+
+Passing Signature: A clean run of all `twister` tests.
+
+Failure Signature: If a `twister` test does not pass, the creation of an issue
+that will be dispensed through the current issue review process.
+
+Result(s): The collection of test results per board will be used to generate a
+dashboard reflecting the current health of the project at this cadence check.
+
+#### Tier 3
+
+Requirement(s): This Tier is really a specialization of the Tier 2 for use in
+the release process. The specialization allows it some additional length of
+time and boards to include per run.
+
+Test Level(s): `system`
+
+Test Length: Several hours.
+
+Passing Signature: A clean run of all `twister` tests.
+
+Failure Signature: A not clean run of all `twsiter` tests.
+
+Result(s): The collection of test results per board will be used to generate a
+dashboard reflecting the current readiness of the project to tag a release or
+release candidate.
+
+#### Tier 4
+
+Requirement(s): Unsupported tier.
+
+Test Level(s): N/A
+
+Test Length: N/A
+
+Passing: N/A
+
+Failure: N/A
+
+Result(s): These boards are provided as-is with no promise of working or
+tracking by the project.
 
 ### Board Identification
 
@@ -171,3 +250,21 @@ The design of a mechanism to allow specific PRs to run on hardware tests before
 the merge train will need to be designed.  This steps into areas of the Zephyr
 CI and GitHub actions that the author of the RFC is not completely confident on
 the ability to make the changes and may require community assistance.
+
+### Unmapped Test Levels
+
+The design leaves the following test levels unmapped: `integration` and
+`regressions`. It is not currently known if these levels are in use and if so
+where they would fit into the recommended tier structuring.
+
+## Terminology
+
+Tier - a hierarchical ranking of boards and their value.
+
+Platform Champion - This is a company or person who has agreed to provide
+support for a specific set of hardware platforms.  This support includes
+assisting in the debug of PR failures on the platform.
+
+Merge Train - a deployment queue mechanism that combines multiple PRs into a
+single into a single group. This allows for testing in the exact state that the
+commits will land, preventing integration failures.

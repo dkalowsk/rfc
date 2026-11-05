@@ -41,7 +41,8 @@ sent out for execution.
 
 A worker can be:
 
-- a low powered or high powered server
+- any device powerful enough to run containers
+- any device with at least one USB port
 - located remotely from the server
 - can have multiple DUTs attached to it
 - can have heterogeneous DUTs attached to it
@@ -59,7 +60,7 @@ it can be hosted by a member company.
 
 Because of the dynamic nature of how most dispatchers work, the use of the
 Zephyr hardware map becomes extremely difficult if not impossible. Thankfully
-we can embed much of the same information into the dispatcher allowing the
+much of the same information can be embedded into the dispatcher allowing the
 details to move with the device and submit these details to twister via the
 command line.
 
@@ -139,7 +140,7 @@ functional. In cases where that is not true, the device is placed into
 can be configured to automatically shut down the USB port, resetting the DUT,
 and bringing it back online as a basic first pass to fix DUTs.
 
-### Outline of Changes
+### Outline of CI Flow Changes
 
 The basic flow needing to be followed per PR will look like so:
 
@@ -156,7 +157,7 @@ The basic flow needing to be followed per PR will look like so:
    1. Locations for bundled artifacts
    1. Name of the LAVA device-type the job needs to run on
    1. Set the steps needed for `twister` to flash this particular platform
-1. Submit the generated job files to the LAVA server for running.
+1. Submit the generated job files to the LAVA dispatching server for running.
 
 After that, the following steps run on each LAVA worker, with the
 details specified in the LAVA job.yaml:
@@ -174,9 +175,10 @@ of platforms to run tests on to the `scripts/ci/test_plan_v2.py` script.
 
 The `test_plan_v2.py` script already supports multiple platforms being submitted
 via the `-p` flag, leaving the work to be done as a collection step before
-calling it. For example, `west boards --tier 1` could show all the tier 1 boards
-associated with the per-PR test suite. That list will need to be converted into
-`--platform` arguments for `test_plan_v2.py` to generate the correct test plan.
+calling it. For example, the proposed `west boards --tier 1` could show all the
+tier 1 boards associated with the per-PR test suite. That list will need to be
+converted into `--platform` arguments for `test_plan_v2.py` to generate the
+correct test plan(s).
 
 The additional change `test_plan_v2.py` will need is to allow passing of specific
 tags to `twister` when generating the testplan. Specifically the CI will want to
@@ -201,8 +203,8 @@ a smaller container for download.
 Any container will need all the pieces to run `twister` installed.
 
 It may make sense to have multiple of these smaller containers with
-different host tools required for flashing installed.
-For example, the following containers could exist:
+different host tools required for flashing installed. Each could be named
+for the specialization needed. For example, the following containers could exist:
 
 - `worker-segger`
 - `worker-openocd`

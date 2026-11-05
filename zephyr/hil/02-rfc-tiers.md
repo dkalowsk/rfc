@@ -35,12 +35,12 @@ is made yet likely work due to the efforts of the community support.
 
 The policy can be broken into a chart:
 
-| Tier    | Per PR | Per Cadence | Supported not tested | Not Supported |
-|---------|--------|-------------|----------------------|---------------|
-| Tier 0  |    x   |             |                      |               |
-| Tier 1  |        |      x      |                      |               |
-| Tier 2  |        |             |           x          |               |
-| Tier 3  |        |             |                      |       x       |
+| Tier    | Emulation | Actively Supported | Supported not tested | Not Supported |
+|---------|-----------|--------------------|----------------------|---------------|
+| Tier 0  |     x     |                    |                      |               |
+| Tier 1  |           |          x         |                      |               |
+| Tier 2  |           |                    |           x          |               |
+| Tier 3  |           |                    |                      |       x       |
 
 Enabling Hardware in the Loop PR support proposes expanding the definitions of
 the tiered support. As before each tier continues to encompass the support of

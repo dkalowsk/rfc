@@ -15,6 +15,7 @@ key information and the results.
 Example PR reports:
  - [Espressif](https://github.com/zephyrproject-rtos/zephyr/pull/117493#issuecomment-6748815326)
  - [Infineon](https://github.com/zephyrproject-rtos/zephyr/pull/101608#issuecomment-3760063560)
+ - [NXP](https://github.com/zephyrproject-rtos/zephyr/pull/122426#issuecomment-6463427636)
  - [Contributor](https://github.com/zephyrproject-rtos/zephyr/pull/118411) see description
  - [Contributor](https://github.com/zephyrproject-rtos/zephyr/pull/120620#issuecomment-6088742399)
 

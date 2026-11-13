@@ -5,21 +5,31 @@
 This problem description assumes that [rfc-tests](rfc-tests.md) and
 [rfc-tiers](rfc-tiers.md) have been solved and describes a final step
 to enabling Hardware In the Loop (HIL) testing: how should the HIL
-testing service run in practice? What test harnesses should be used,
-how should they be administered, and who should be responsible for
-individual components within them?
+testing service run in practice? How should the test harness be administered,
+and who should be responsible for individual components within them?
 
 ## Proposed Change (Summary)
 
 At a high level, enabling the HIL service is going to require standardizing
-upon a job dispatcher, which will then direct the necessary changes to
-the Zephyr CI to support testing. All of this must be accomplished using the
-current `twister` implementation.
-
-In this RFC, the proposal is to standardize the job dispatcher on the [Linaro's
-LAVA](https://www.lavasoftware.org/).
+upon the location of test boards, a means to administer them, and a means
+to enable/disable from the Zephyr CI.
 
 ## Proposed Change (Detail)
+
+Now that the project has decided to move forward with HIL testing, the question
+becomes where the boards will be housed.  At the time of writing, there are three
+options available to the project, each with their advantages and disadvantages. The
+next few sections will go into detail of these options.
+
+### Zephyr Hosted
+
+The Zephyr project has dedicated lab space allocated to it in the South Korean datacenter
+hosted by Stephanos. Utilizing this space provides the Zephyr project with complete
+
+### 3rd Party Hosted
+
+### Contributor Hosted
+
 
 Any HIL setup requires a job dispatcher. Typically a job dispatcher has the
 following major responsibilities:
